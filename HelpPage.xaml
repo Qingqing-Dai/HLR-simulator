@@ -1,0 +1,33 @@
+﻿<Page x:Class="HLR_Simulator.HelpPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="HelpPage">
+
+    <ScrollViewer Padding="20">
+        <StackPanel>
+            <TextBlock FontSize="18" FontWeight="Bold" Margin="0,0,0,10">How to Use the HLR Simulator</TextBlock>
+
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                1. Click **Start** to begin the simulation timer.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                2. Press **Compression** or **Ventilation** buttons to record actions. Feedback will be shown.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                3. Click **Save** to store the session results and display charts.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                4. View saved results under the **Result** tab.
+            </TextBlock>
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                5. Customize settings via **Settings → Trainee / Compression / Ventilation** tabs.
+            </TextBlock>
+
+            <Button Content="← Back to Main" 
+                    HorizontalAlignment="Left" 
+                    Margin="0,20,0,0"
+                    Padding="10,5"
+                    Click="BackToMain_Click"/>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

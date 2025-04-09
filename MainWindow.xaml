@@ -1,33 +1,136 @@
 ﻿<Window x:Class="HLR_Simulator.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:HLR_Simulator"
-        mc:Ignorable="d"
-        Title="HLR Simulator" Height="400" Width="600">
-    <Grid>
-        <!-- Title HLR Simulator -->
-        <TextBlock Text="HLR Simulator" 
-                   FontSize="24" 
-                   FontWeight="Bold" 
-                   HorizontalAlignment="Center" 
-                   Margin="0,20,0,0"/>
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        Title="HLR Simulator" Height="500" Width="800" Background="#F5F7FA" WindowStartupLocation="CenterScreen">
 
-        <!-- Start-knapp -->
-        <Button Name="StartButton" 
-                Content="Start Simulation" 
-                Width="200" Height="50" 
-                HorizontalAlignment="Center" 
-                VerticalAlignment="Center" 
-                Click="StartButton_Click"/>
+    <Window.Resources>
+        <!-- Button tyles -->
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="#3C8DBC"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderBrush" Value="#3C8DBC"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-        <!-- Statusmelding -->
-        <TextBlock Name="StatusText" 
-                   Text="Klar til å starte..." 
-                   HorizontalAlignment="Center" 
-                   VerticalAlignment="Bottom" 
-                   Margin="0,0,0,20"/>
+        <!-- Menu background -->
+        <Style TargetType="MenuItem">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#4A90E2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
 
-    </Grid>
+    <DockPanel>
+
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top" Background="#2E3B4E" Foreground="White" FontSize="14" Padding="6">
+            <MenuItem Header="Bluetooth">
+                <MenuItem Header="Search for Devices" Foreground="Black" Click="SearchDevices_Click"/>
+                <MenuItem Header="Pair New Device" Foreground="Black" Click="PairDevice_Click"/>
+                <MenuItem Header="Remove Paired Device" Foreground="Black" Click="RemoveDevice_Click"/>
+            </MenuItem>
+
+
+            <MenuItem Header="Settings">
+                <MenuItem Header="Trainee" Foreground="Black" Click="TraineeSettings_Click"/>
+                <MenuItem Header="Compression" Foreground="Black" Click="CompressionSettings_Click"/>
+                <MenuItem Header="Ventilation" Foreground="Black" Click="VentilationSettings_Click"/>
+            </MenuItem>
+
+            <!--<MenuItem Header="View" Click="ViewButton_Click" />-->
+            <MenuItem Header="Tools" Click="ToolsButton_Click" />
+            <!--maybe need to add more hardware devices -->
+            <MenuItem Header="Result" Click="ResultButton_Click" />
+            <MenuItem Header="Help" Click="HelpButton_Click" />
+            <!--User manual of this APP-->
+            <MenuItem Header="Login" Click="LoginButton_Click" />
+            <!--possible to log in with different user account-->
+            <TextBlock x:Name="LoggedInUserText"
+                DockPanel.Dock="Right"
+                Margin="0,0,10,0"
+                VerticalAlignment="Center"
+                Foreground="White"
+                FontWeight="Bold"
+                FontSize="14"
+                Text="Not logged in" />
+        </Menu>
+
+        <!-- Main Content Panels -->
+        <Grid Name="MainContentGrid">
+            <!-- Main Simulation Panel -->
+            <DockPanel Name="MainPanel">
+                
+                <!-- Left Buttons -->
+                <StackPanel DockPanel.Dock="Left" Background="#555" Width="150" Margin="5">
+                    <Button Name="StartButton" Content="Start" Margin="5" Click="StartButton_Click" />
+                    <Button Name="StopButton" Content="Stop" Margin="5" Click="StopButton_Click" />
+                    <Button Name="ResetButton" Content="Reset" Margin="5" Click="ResetButton_Click" />
+                    <Button Name="SaveButton" Content="Save" Margin="5" Click="SaveButton_Click" />
+                    <Button Name="CompressionButton" Content="Compression" Margin="5" Click="CompressionButton_Click" />
+                    <Button Name="VentilationButton" Content="Ventilation" Margin="5" Click="VentilationButton_Click" />
+                </StackPanel>
+
+                <!-- Right Text Panel -->
+                <StackPanel Background="#EEE" Margin="10">
+                    <TextBlock Name="StatusText" Text="Welcome to CPR Simulator!" FontSize="18" Margin="5" />
+                    <TextBlock Name="CountText" Text="Compressions: 0" FontSize="16" Margin="5" />
+                    <TextBlock Name="VentilationText" Text="Ventilations: 0" FontSize="16" Margin="5" />
+                    <TextBlock Name="DepthText" Text="Pressure depth: 0 cm" FontSize="16" Margin="5" />
+                    <TextBlock Name="TimerText" Text="Time: 0 seconds" FontSize="16" Margin="5" />
+                    <lvc:CartesianChart Name="RhythmChart" Height="200" Margin="5">
+                        <lvc:CartesianChart.Series>
+                            <lvc:LineSeries Title="Compression CPM"
+                        Values="{Binding CompressionRates}"
+                        Stroke="Green"
+                        PointGeometrySize="6" />
+                            <lvc:LineSeries Title="Ventilation VPM"
+                        Values="{Binding VentilationRates}"
+                        Stroke="Blue"
+                        PointGeometrySize="6" />
+                        </lvc:CartesianChart.Series>
+                        <lvc:CartesianChart.AxisX>
+                            <lvc:Axis Title="Event #" />
+                        </lvc:CartesianChart.AxisX>
+                        <lvc:CartesianChart.AxisY>
+                            <lvc:Axis Title="Rate (per min)" />
+                        </lvc:CartesianChart.AxisY>
+                    </lvc:CartesianChart>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Result Display Panel -->
+            <StackPanel Name="ResultPanel" Visibility="Collapsed" Margin="20">
+                <Button Content="← Back to Main" HorizontalAlignment="Left" Margin="0,0,0,10" Click="BackToMain_Click" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <TextBlock Name="ResultText" FontSize="14" TextWrapping="Wrap" />
+                </ScrollViewer>
+            </StackPanel>
+            <Frame x:Name="MainFrame"
+                    NavigationUIVisibility="Hidden"
+                    Visibility="Collapsed"
+                    Margin="10" />
+        </Grid>
+    </DockPanel>
 </Window>
