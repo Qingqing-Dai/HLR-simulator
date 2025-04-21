@@ -1,7 +1,28 @@
-
+﻿
 # HLR (CPR) Simulator
 
 This is a custom-built WPF application for simulating CPR (Cardiopulmonary Resuscitation) performance, including compression and ventilation tracking. It was developed as a demonstration of interactive medical simulation and software design.
+
+# Visual Breakdown of the MVVM Project Structure
+│
+├── MainWindow.xaml               ← View (UI layout: buttons, chart, text blocks)
+├── MainWindow.xaml.cs            ← Code-behind (sets DataContext, handles UI events)
+│     └── Uses MainViewModel
+│
+├── MainViewModel.cs              ← ViewModel (holds logic, chart data, async loop)
+│     └── ChartValues<double> for compression & ventilation
+│     └── Start/Stop/Reset methods
+│     └── Starts async simulation loop
+│
+├── SimulationResult.cs           ← Model (simple data structure)
+│     └── Timestamp
+│     └── Compressions
+│     └── Ventilations
+│
+├── Other folders (optional for growth)
+│     └── Models/                 ← Store SimulationResult and future data classes
+│     └── ViewModels/            ← Store MainViewModel and others
+│     └── Views/                 ← Store MainWindow and other XAML views
 
 ## Features
 - Live simulation of compressions and ventilations  

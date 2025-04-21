@@ -9,16 +9,10 @@ using System.Text;
 using LiveCharts;
 using LiveCharts.Wpf;
 
-namespace HLR_Simulator
-{
-    public class SimulationResult
-    {
-        public DateTime Timestamp { get; set; }
-        public int Compressions { get; set; }
-        public int Ventilations { get; set; }
-    }
 
-   
+
+namespace HLR_Simulator
+{  
     public partial class MainWindow : Window
     {
         private int compressionCount = 0;
@@ -30,8 +24,10 @@ namespace HLR_Simulator
         private List<double> compressionIntervals;
         private List<double> ventilationIntervals;
         private List<SimulationResult> simulationResults = new List<SimulationResult>();
-        public ChartValues<double> CompressionRates { get; set; } = new ChartValues<double>();
-        public ChartValues<double> VentilationRates { get; set; } = new ChartValues<double>();
+        private MainViewModel viewModel;
+
+
+
 
 
 
@@ -48,7 +44,10 @@ namespace HLR_Simulator
             lastVentilationTime = 0;
             compressionCount = 0;
             ventilationCount = 0;
-           
+            
+            viewModel = new MainViewModel();
+            this.DataContext = viewModel;
+            List<SimulationResult> simulationResults = new List<SimulationResult>();
         }
         public void ShowMainPanel()
         {
@@ -164,16 +163,26 @@ namespace HLR_Simulator
             startTime = DateTime.Now;
             compressionCount = 0;
             ventilationCount = 0;
+
             StatusText.Text = "Simulation started!";
             StatusText.Foreground = Brushes.Black;
+
             timer.Start();
+            viewModel.StartSimulation();
+
+            CountText.Text = "Compressions: 0";
+            VentilationText.Text = "Ventilations: 0";
+            TimerText.Text = "Time: 0 seconds";
         }
+
 
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
             timer.Stop();
             StatusText.Text = "Simulation stopped.";
+            viewModel.StopSimulation();
         }
+
 
         private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
@@ -182,24 +191,27 @@ namespace HLR_Simulator
             lastCompressionTime = 0;
             lastVentilationTime = 0;
             startTime = DateTime.Now;
-            //Clear compression value, ventilation value.
-            compressionIntervals.Clear();
-            ventilationIntervals.Clear();
-            simulationResults.Clear();
-            // Clear chart data
-            CompressionRates.Clear();
-            VentilationRates.Clear();
-            // Clear result display if using panel
+
+            // Clear ViewModel data
+            viewModel.ResetSimulation();
+
+            // Clear local lists (if ViewModel doesn't handle them)
+            compressionIntervals?.Clear();
+            ventilationIntervals?.Clear();
+            simulationResults?.Clear();
+
+            // Reset UI elements
             ResultText.Text = "";
-            // Overwrite CSV file with headers
-            string filePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "HLR_Results.csv");
-            System.IO.File.WriteAllText(filePath, "Timestamp, Compressions, Ventilations, CPM, VPM\n");
-            // Reset UI labels
             StatusText.Text = "Simulation reset.";
             CountText.Text = "Compressions: 0";
             VentilationText.Text = "Ventilations: 0";
             TimerText.Text = "Time: 0 seconds";
+
+            // Overwrite CSV file with header
+            string filePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "HLR_Results.csv");
+            System.IO.File.WriteAllText(filePath, "Timestamp, Compressions, Ventilations, CPM, VPM\n");
         }
+
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -269,19 +281,18 @@ namespace HLR_Simulator
                 {
                     StatusText.Text = $"Compression: {compressionCount} (Good Rate: {Math.Round(cpm)} CPM)";
                     StatusText.Foreground = System.Windows.Media.Brushes.Green;
-                    UpdateCompressionChart(cpm);
                 }
                 else if (cpm < 100)
                 {
                     StatusText.Text = $"Compression: {compressionCount} (Too Slow: {Math.Round(cpm)} CPM)";
                     StatusText.Foreground = System.Windows.Media.Brushes.Orange;
-                    UpdateCompressionChart(cpm);
+                    
                 }
                 else
                 {
                     StatusText.Text = $"Compression: {compressionCount} (Too Fast: {Math.Round(cpm)} CPM)";
                     StatusText.Foreground = System.Windows.Media.Brushes.Red;
-                    UpdateCompressionChart(cpm);
+                   
                 }
             }
             lastCompressionTime = currentTime;
@@ -320,19 +331,19 @@ namespace HLR_Simulator
                 {
                     StatusText.Text = $"Ventilation: {ventilationCount} (Good Rate: {Math.Round(vpm)} VPM)";
                     StatusText.Foreground = System.Windows.Media.Brushes.Green;
-                    UpdateVentilationChart(vpm);
+                    
                 }
                 else if (vpm < 10)
                 {
                     StatusText.Text = $"Ventilation: {ventilationCount} (Too Slow: {Math.Round(vpm)} VPM)";
                     StatusText.Foreground = System.Windows.Media.Brushes.Orange;
-                    UpdateVentilationChart(vpm);
+                    
                 }
                 else
                 {
                     StatusText.Text = $"Ventilation: {ventilationCount} (Too Fast: {Math.Round(vpm)} VPM)";
                     StatusText.Foreground = System.Windows.Media.Brushes.Red;
-                    UpdateVentilationChart(vpm);
+                   
                 }
             }
 
@@ -389,16 +400,9 @@ namespace HLR_Simulator
                 Ventilations = ventilationCount
             });
         }*/
-        private void UpdateCompressionChart(double cpm)
-        {
-            CompressionRates.Add(cpm);
-            RhythmChart.Series[0].Values = CompressionRates;
-        }
-        private void UpdateVentilationChart(double vpm)
-        {
-            VentilationRates.Add(vpm);
-            RhythmChart.Series[1].Values = VentilationRates;
-        }
+
+
+
 
     }
 }
