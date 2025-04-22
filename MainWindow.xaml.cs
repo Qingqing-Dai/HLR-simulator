@@ -80,6 +80,7 @@ namespace HLR_Simulator
         private void BluetoothSettings_Click(object sender, RoutedEventArgs e)
         {
             // TODO: Navigate to BluetoothSettings.xaml
+            HideAllPanels();
             MainFrame.Navigate(new BluetoothSettings());
         }
 
@@ -126,26 +127,26 @@ namespace HLR_Simulator
 
         private void ToolsButton_Click(object sender, RoutedEventArgs e)
         {
+            HideAllPanels();
             MessageBox.Show("Tools menu clicked.");
         }
         private void ResultButton_Click(object sender, RoutedEventArgs e)
         {
+            HideAllPanels();
             ResultPanel.Visibility = Visibility.Visible;
-            MainPanel.Visibility = Visibility.Collapsed;
+            
         }
 
         private void HelpButton_Click(object sender, RoutedEventArgs e)
         {
-            MainPanel.Visibility = Visibility.Collapsed;
-            ResultPanel.Visibility = Visibility.Collapsed;
+            HideAllPanels();
             MainFrame.Visibility = Visibility.Visible;
             MainFrame.Navigate(new HelpPage());
         }
 
         private void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            MainPanel.Visibility = Visibility.Collapsed;
-            ResultPanel.Visibility = Visibility.Collapsed;
+            HideAllPanels();
             MainFrame.Visibility = Visibility.Visible;
             MainFrame.Navigate(new LoginPage());
         }
@@ -325,6 +326,14 @@ namespace HLR_Simulator
             int elapsed = (int)(DateTime.Now - startTime).TotalSeconds;
             viewModel.UpdateElapsedTime(elapsed);  // updates TimerDisplay
         }
+
+        private void HideAllPanels()
+        {
+            MainPanel.Visibility = Visibility.Collapsed;
+            ResultPanel.Visibility = Visibility.Collapsed;
+            MainFrame.Visibility = Visibility.Collapsed;
+        }
+
 
 
     }
