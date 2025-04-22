@@ -94,11 +94,13 @@
 
                 <!-- Right Text Panel -->
                 <StackPanel Background="#EEE" Margin="10">
-                    <TextBlock Name="StatusText" Text="Welcome to CPR Simulator!" FontSize="18" Margin="5" />
-                    <TextBlock Name="CountText" Text="Compressions: 0" FontSize="16" Margin="5" />
-                    <TextBlock Name="VentilationText" Text="Ventilations: 0" FontSize="16" Margin="5" />
-                    <TextBlock Name="DepthText" Text="Pressure depth: 0 cm" FontSize="16" Margin="5" />
-                    <TextBlock Name="TimerText" Text="Time: 0 seconds" FontSize="16" Margin="5" />
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="{Binding StatusColor}" FontSize="18" Margin="5" />
+                    <TextBlock Text="{Binding CompressionDisplay}" FontSize="16" Margin="5" />
+                    <TextBlock Text="{Binding VentilationDisplay}" FontSize="16" Margin="5" />
+
+                    <TextBlock Text="{Binding TimerDisplay}" FontSize="16" Margin="5" />
+                    <TextBlock Text="{Binding DepthDisplay}" FontSize="16" Margin="5" />
+
                     <lvc:CartesianChart Name="RhythmChart" Height="200" Margin="5">
                         <lvc:CartesianChart.Series>
                             <lvc:LineSeries Title="Compression CPM"
