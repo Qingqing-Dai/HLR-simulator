@@ -24,9 +24,8 @@ namespace HLR_Simulator
         private List<double> compressionIntervals;
         private List<double> ventilationIntervals;
         private List<SimulationResult> simulationResults = new List<SimulationResult>();
+        
         private MainViewModel viewModel;
-
-
 
 
 
@@ -46,7 +45,8 @@ namespace HLR_Simulator
             ventilationCount = 0;
             
             viewModel = new MainViewModel();
-            this.DataContext = viewModel;
+            DataContext = viewModel;
+
             List<SimulationResult> simulationResults = new List<SimulationResult>();
         }
         public void ShowMainPanel()
@@ -160,26 +160,38 @@ namespace HLR_Simulator
 
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
+            // Reset values
             startTime = DateTime.Now;
             compressionCount = 0;
             ventilationCount = 0;
 
-            StatusText.Text = "Simulation started!";
-            StatusText.Foreground = Brushes.Black;
+            // Clear lists
+            compressionIntervals?.Clear();
+            ventilationIntervals?.Clear();
+            simulationResults?.Clear();
 
+            // Update ViewModel properties
+            viewModel.StatusMessage = "Simulation started!";
+            viewModel.StatusColor = Brushes.Black;
+            viewModel.UpdateElapsedTime(0);
+            viewModel.IsRunning = true;
+
+            // These force label updates
+            viewModel.CompressionCount = 0;
+            viewModel.VentilationCount = 0;
+            viewModel.OnPropertyChanged(nameof(viewModel.CompressionDisplay));
+            viewModel.OnPropertyChanged(nameof(viewModel.VentilationDisplay));
+
+            // Start the timer
             timer.Start();
-            viewModel.StartSimulation();
-
-            CountText.Text = "Compressions: 0";
-            VentilationText.Text = "Ventilations: 0";
-            TimerText.Text = "Time: 0 seconds";
         }
+
+
 
 
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
             timer.Stop();
-            StatusText.Text = "Simulation stopped.";
             viewModel.StopSimulation();
         }
 
@@ -202,10 +214,6 @@ namespace HLR_Simulator
 
             // Reset UI elements
             ResultText.Text = "";
-            StatusText.Text = "Simulation reset.";
-            CountText.Text = "Compressions: 0";
-            VentilationText.Text = "Ventilations: 0";
-            TimerText.Text = "Time: 0 seconds";
 
             // Overwrite CSV file with header
             string filePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "HLR_Results.csv");
@@ -232,8 +240,10 @@ namespace HLR_Simulator
                     double cpm = result.Compressions > 0 ? 60 / (compressionIntervals.Count > 0 ? compressionIntervals.Average() : 1) : 0;
                     double vpm = result.Ventilations > 0 ? 60 / (ventilationIntervals.Count > 0 ? ventilationIntervals.Average() : 1) : 0;
 
-                    resultDisplay.AppendLine(string.Format("{0,-20:g} {1,-20} {2,-20} {3,-15} {4,-15}",
+                    resultDisplay.AppendLine(string.Format("{0,-20:dd.MM.yyyy HH:mm:ss} {1,-20} {2,-20} {3,-15} {4,-15}",
                         result.Timestamp, result.Compressions, result.Ventilations, Math.Round(cpm), Math.Round(vpm)));
+                    
+                    resultBuilder.AppendLine($"{result.Timestamp:g},{result.Compressions},{result.Ventilations},{Math.Round(cpm)},{Math.Round(vpm)}");
                 }
 
 
@@ -245,119 +255,43 @@ namespace HLR_Simulator
                 ResultPanel.Visibility = Visibility.Visible;
                 MainPanel.Visibility = Visibility.Collapsed;
                 ResultText.Text = resultDisplay.ToString();
-                StatusText.Text = "Results saved successfully!";
+                viewModel.StatusMessage = "Results saved successfully!";
+                viewModel.StatusColor = Brushes.Green;
+
             }
             catch (Exception ex)
             {
-                StatusText.Text = $"Error saving results: {ex.Message}";
+                viewModel.StatusMessage = $"Error saving results: {ex.Message}";
+                viewModel.StatusColor = Brushes.Red;
+
             }
 
         }
 
         private void CompressionButton_Click(object sender, RoutedEventArgs e)
         {
-            compressionCount++;
-            double currentTime = (DateTime.Now - startTime).TotalSeconds;
-
-            // Calculate compression rate (compressions per minute - CPM)
-            // Green: Good Rate (100-120 CPM).
-            // Orange: Too Slow (< 100 CPM).
-            // Red: Too Fast (> 120 CPM).
-            if (lastCompressionTime > 0)
-            {
-                double interval = currentTime - lastCompressionTime;
-
-                // Ensure the list is initialized before adding
-                if (compressionIntervals == null)
-                {
-                    compressionIntervals = new List<double>();
-                }
-
-                compressionIntervals.Add(interval);
-                double cpm = 60 / interval;
-
-                // Color indicator based on compression rate (ideal range: 100 - 120 CPM)
-                if (cpm >= 100 && cpm <= 120)
-                {
-                    StatusText.Text = $"Compression: {compressionCount} (Good Rate: {Math.Round(cpm)} CPM)";
-                    StatusText.Foreground = System.Windows.Media.Brushes.Green;
-                }
-                else if (cpm < 100)
-                {
-                    StatusText.Text = $"Compression: {compressionCount} (Too Slow: {Math.Round(cpm)} CPM)";
-                    StatusText.Foreground = System.Windows.Media.Brushes.Orange;
-                    
-                }
-                else
-                {
-                    StatusText.Text = $"Compression: {compressionCount} (Too Fast: {Math.Round(cpm)} CPM)";
-                    StatusText.Foreground = System.Windows.Media.Brushes.Red;
-                   
-                }
-            }
-            lastCompressionTime = currentTime;
-            CountText.Text = $"Compressions: {compressionCount}";
-
-            // Play compression sound
+            viewModel.RegisterCompression();
             PlaySound("buttonClick.mp3");
             simulationResults.Add(new SimulationResult
             {
                 Timestamp = DateTime.Now,
-                Compressions = compressionCount,
+                Compressions = viewModel.CompressionCount,
+                Ventilations = viewModel.VentilationCount
             });
         }
 
         private void VentilationButton_Click(object sender, RoutedEventArgs e)
         {
-            ventilationCount++;
-            double currentTime = (DateTime.Now - startTime).TotalSeconds;
-
-            // Calculate ventilation rate (ventilations per minute - VPM)
-            if (lastVentilationTime > 0)
-            {
-                double interval = currentTime - lastVentilationTime;
-
-                // Ensure the list is initialized before adding
-                if (ventilationIntervals == null)
-                {
-                    ventilationIntervals = new List<double>();
-                }
-
-                ventilationIntervals.Add(interval);
-                double vpm = 60 / interval;
-
-                // Color indicator based on ventilation rate (ideal range: 10 - 12 VPM)
-                if (vpm >= 10 && vpm <= 12)
-                {
-                    StatusText.Text = $"Ventilation: {ventilationCount} (Good Rate: {Math.Round(vpm)} VPM)";
-                    StatusText.Foreground = System.Windows.Media.Brushes.Green;
-                    
-                }
-                else if (vpm < 10)
-                {
-                    StatusText.Text = $"Ventilation: {ventilationCount} (Too Slow: {Math.Round(vpm)} VPM)";
-                    StatusText.Foreground = System.Windows.Media.Brushes.Orange;
-                    
-                }
-                else
-                {
-                    StatusText.Text = $"Ventilation: {ventilationCount} (Too Fast: {Math.Round(vpm)} VPM)";
-                    StatusText.Foreground = System.Windows.Media.Brushes.Red;
-                   
-                }
-            }
-
-            lastVentilationTime = currentTime;
-            VentilationText.Text = $"Ventilations: {ventilationCount}";
-
-            // Play ventilation sound
+            viewModel.RegisterVentilation();
             PlaySound("breathStinger.mp3");
             simulationResults.Add(new SimulationResult
             {
                 Timestamp = DateTime.Now,
-                Ventilations = ventilationCount
+                Compressions = viewModel.CompressionCount,
+                Ventilations = viewModel.VentilationCount
             });
         }
+
 
         //---------------- other functions -----------------
 
@@ -375,33 +309,22 @@ namespace HLR_Simulator
                 }
                 else
                 {
-                    StatusText.Text = "Sound file not found!";
                     MessageBox.Show($"Sound file '{fileName}' was not found at the path: {path}");
                 }
             }
             catch (Exception ex)
             {
-                StatusText.Text = "Could not play sound.";
+                
                 MessageBox.Show($"Error playing sound: {ex.Message}");
             }
         }
 
+
         private void Timer_Tick(object sender, EventArgs e)
         {
-            double elapsed = (DateTime.Now - startTime).TotalSeconds;
-            TimerText.Text = $"Time: {elapsed:F0} seconds";
+            int elapsed = (int)(DateTime.Now - startTime).TotalSeconds;
+            viewModel.UpdateElapsedTime(elapsed);  // updates TimerDisplay
         }
-        /*private void RecordSimulationResult()
-        {
-            simulationResults.Add(new SimulationResult
-            {
-                Timestamp = DateTime.Now,
-                Compressions = compressionCount,
-                Ventilations = ventilationCount
-            });
-        }*/
-
-
 
 
     }
